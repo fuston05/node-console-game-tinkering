@@ -1,0 +1,19 @@
+{
+  "name": "node_game_practice",
+  "version": "1.0.0",
+  "description": "tinkering with node",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fuston05/nodejs-game-practice.git"
+  },
+  "author": "Scott Fuston",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/fuston05/nodejs-game-practice/issues"
+  },
+  "homepage": "https://github.com/fuston05/nodejs-game-practice#readme"
+}
