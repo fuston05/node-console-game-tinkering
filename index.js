@@ -20,81 +20,95 @@ gameBoard.buildGrid();
 let player = "X";
 console.log(`Player turn: ${player}`);
 
-const formatInput = (inp) => {
-  if (inp.length > 1) {
-    // coords entered
-    let c = inp.includes(",")
-      ? inp.trim().split(",")
-      : inp.includes(" ")
-      ? inp.trim().split(" ")
-      : inp.trim().split("");
+const formatCoords = (inp) => {
+  // remove ',' and ' '
+  let tempInp = inp.replace(/[, ]*/g, "").split("");
 
-    let newC = [];
-    c.forEach((ele) => {
-      if (ele !== "") newC.push(ele.trim());
-    });
-    console.log("\ninput: ", newC, "\n");
-    return newC;
+  return tempInp.map((ele) => {
+    return parseInt(ele);
+  });
+};
+
+const formatCommand = (inp) => {
+  return inp.toLowerCase().trim();
+};
+
+const parseInput = (inp) => {
+  let nReg = /^[1-3]{1}(?:[, ])*[1-3]{1}$/g;
+  let lReg = /^[a-z]{1}$/gi;
+
+  if (inp.match(nReg)) {
+    // is exactly 2 nums 1, 2, or 3?
+    return formatCoords(inp);
+  } else if (inp.match(lReg)) {
+    // is a single letter command
+    return formatCommand(inp);
   } else {
-    // quit command
-    let res = inp.trim().toLowerCase();
-    console.log("\ninput: ", res, "\n");
-    return res;
+    // input not understood
+    console.log(
+      "\nCommands: single letter only; i.e. 'Q' \nCoordinates: 2 digits, numbers 1-3 only; i.e. '3, 1'\n"
+    );
+
+    return false;
   }
 };
 
-const inputController = (x = null, y = null, q = null) => {
-  // possibilities:
-  // Q to quit
-  // x: 1, 2, 3
-  // y: 1, 2, 3
-  // const userInput = inp;
-  // const switchObj= {
-  //   ['1', '1'] : "",
-  //   ['1', '2'] : "",
-  //   ['1', '3'] : "",
-  //   ['2', '1'] : "",
-  //   ['2', '2'] : "",
-  //   ['2', '3'] : "",
-  //   ['3', '1'] : "",
-  //   ['3', '2'] : "",
-  //   ['3', '3'] : "",
-  // }
+const isWinner = (player) => {
+  // winner: [1][1], [1][2], [1][3] // any rows
+  // or [1][1], [2][1], [1][3] // any column
+  //  or [1][1], [2][2], [3][3] //diag
+  // or reverse [1][3], [2][2], [3][1] //diag
+  const grid = gameBoard.grid;
+  if (
+    // any row
+    (grid[2][2] === player && grid[2][3] === player && grid[2][4] === player) ||
+    (grid[3][2] === player && grid[3][3] === player && grid[3][4] === player) ||
+    (grid[4][2] === player && grid[4][3] === player && grid[4][4] === player) ||
+    // any cols
+    (grid[2][2] === player && grid[2][3] === player && grid[2][4] === player) ||
+    (grid[3][2] === player && grid[3][3] === player && grid[3][4] === player) ||
+    (grid[4][2] === player && grid[4][3] === player && grid[4][4] === player) ||
+    // any diag
+    (grid[2][2] === player && grid[3][3] === player && grid[4][4] === player) ||
+    (grid[2][4] === player && grid[3][3] === player && grid[4][2] === player)
+  ) {
+    return player;
+  } else return null;
+};
+
+const setCoord = (inp) => {
+  let char = player;
+  console.log("setCoord: ", inp);
+  console.log("char: ", char);
+  gameBoard.grid[inp[0] + 1][inp[1] + 1].char = char;
+  gameBoard.update();
+
+  if (isWinner(player)) {
+    console.log(`Player ${player} wins!`);
+  } else {
+    // toggle player
+    player = player = "X" ? "O" : "X";
+  }
+};
+
+const runCommand = (inp) => {
+  console.log("runCommand: ", inp);
 };
 
 rl.question("Enter x, y coords (or Q to quit) ", (userInput) => {
-  let input = formatInput(userInput);
+  let input = parseInput(userInput);
   console.log("type: ", typeof input);
+  console.log("input: ", input);
 
-  let type = typeof input;
+  if (!input) return;
 
-  if (type === "string") {
-    console.log("string: ", input);
-    return;
-  }
+  console.log("success!");
 
-  //   number of chars/digits
-  if (type === "object" && input.length !== 2) {
-    console.log(`Please enter 2 coords: X, Y`);
-    return;
-  }
-
-  //  length of each digit
-  if ((type === "object" && input[0].length > 1) || input[1].length > 1) {
-    console.log(
-      `One of your coords contains more than one digit: X: ${input[0]}, Y: ${input[1]}`
-    );
-    return;
-  }
-
-  // number only
-  if (type === "object" && !input[0].match(/\d/g)) {
-    console.log(`Numbers only`);
-    return;
-  }
-
-  if ((type === "object" && input[0] > 3) || input[1] > 3) {
-    console.log(`num < 4 only`);
-    return;
+  if (typeof input === "object") {
+    // set coords
+    setCoord(input);
+  } else {
+    // run command
+    runCommand(input);
   }
 });
