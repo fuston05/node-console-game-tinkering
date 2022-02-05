@@ -1,17 +1,18 @@
 const NodeObj = require("./NodeObj");
 
 class GameBoard {
-  constructor({ hSpace = 2, vSpace = 1, vGut = 1, borderSym = "" }) {
-    this.playing = true;
+  constructor({ hSpace = 2, vSpace = 1, vGut = 1, border = "" }) {
+
     this.grid = [
-      ["*", "*", "*", "*", "*", "*"],
-      ["*", "0", "1", "2", "3", "*"],
-      ["*", "1", " ", " ", " ", "*"],
-      ["*", "2", " ", " ", " ", "*"],
-      ["*", "3", " ", " ", " ", "*"],
-      ["*", "*", "*", "*", "*", "*"],
+      ["", "", "", "", "", ""],
+      ["", "", "", "", "", ""],
+      ["", "", "", "", "", ""],
+      ["", "", "", "", "", ""],
+      ["", "", "", "", "", ""],
+      ["", "", "", "", "", ""],
     ];
-    this.border = borderSym;
+
+    this.border = border;
     this.hSpacing = hSpace;
     this.vSpacing = vSpace;
     this.gridWidth = this.grid.length + this.hSpacing * (this.grid.length - 1);
@@ -25,13 +26,17 @@ class GameBoard {
   buildGrid = () => {
     for (let i = 0; i < this.grid.length; i++) {
       for (let j = 0; j < this.grid.length; j++) {
-        if (this.grid[i][j] === "*") {
+        if (i === 0 || i === 5 || j === 5 || (i > 0 && j === 0)) {
+          // set up border
           this.grid[i][j] = new NodeObj(`${this.border}`);
         } else if (i === 1 && j > 0 && j < 5) {
+          // horizontal nums row
           this.grid[i][j] = new NodeObj(`${j - 1}`);
         } else if (i > 1 && i < 5 && j === 1) {
+          // vertical nums col
           this.grid[i][j] = new NodeObj(`${i - 1}`);
         } else {
+          // play area
           this.grid[i][j] = new NodeObj("_");
         }
         this.update();
@@ -40,9 +45,6 @@ class GameBoard {
   };
 
   update = () => {
-    if(!this.playing){
-        return false;
-    }
     console.clear();
 
     let out = "\n".repeat(this.vGutter);
@@ -52,7 +54,7 @@ class GameBoard {
 
       for (let j = 0; j < this.grid.length; j++) {
         this.grid[i][j].hasOwnProperty("char")
-          ? (out += this.grid[i][j].char)
+          ? (out += this.grid[i][j].char || this.grid[i][j])
           : (out += " ");
         j < this.grid.length - 1 ? (out += " ".repeat(this.hSpacing)) : null;
       }
