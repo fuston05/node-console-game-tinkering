@@ -1,8 +1,12 @@
 const NodeObj = require("./NodeObj");
+const { getBoardLayout } = require("../utils.js");
+const Game = require("./Game");
 
 class GameBoard {
-  constructor({ hSpace = 2, vSpace = 1, vGut = 1, border = "" }) {
-
+  constructor(score, players) {
+    this.score = score;
+    this.player_1 = () => players.one;
+    this.player_2 = () => players.two;
     this.grid = [
       ["", "", "", "", "", ""],
       ["", "", "", "", "", ""],
@@ -11,19 +15,35 @@ class GameBoard {
       ["", "", "", "", "", ""],
       ["", "", "", "", "", ""],
     ];
-
+    const { border, hSpacing, vSpacing, hGutter, vGutter, tWidth } =
+      getBoardLayout();
+    this.tWidth = tWidth;
     this.border = border;
-    this.hSpacing = hSpace;
-    this.vSpacing = vSpace;
-    this.gridWidth = this.grid.length + this.hSpacing * (this.grid.length - 1);
-    this.hGutter = this.tWidth / 2 - this.gridWidth / 2;
-    this.vGutter = vGut;
+    this.hSpacing = hSpacing;
+    this.vSpacing = vSpacing;
+    this.hGutter = hGutter;
+    this.vGutter = vGutter;
   }
 
-  tWidth = process.stdout.columns;
-  tHeight = process.stdout.rows;
+  scoreBoard() {
+    let p_x = `Player X (${this.player_1()}): ${this.score.X}`;
+    let p_o = `Player O (${this.player_2()}): ${this.score.O}`;
 
-  buildGrid = () => {
+    let midMargin = this.tWidth * 0.4;
+    let leftMargin = this.tWidth / 2 - (p_x.length + midMargin / 2);
+
+    let out = "*".repeat(this.tWidth);
+    out += " ".repeat(leftMargin);
+    out += p_x;
+    out += " ".repeat(midMargin);
+    out += p_o;
+    out += "\n";
+    out += "*".repeat(this.tWidth);
+
+    console.log(out);
+  }
+
+  initGrid() {
     for (let i = 0; i < this.grid.length; i++) {
       for (let j = 0; j < this.grid.length; j++) {
         if (i === 0 || i === 5 || j === 5 || (i > 0 && j === 0)) {
@@ -39,13 +59,14 @@ class GameBoard {
           // play area
           this.grid[i][j] = new NodeObj("_");
         }
-        this.update();
       }
     }
-  };
+  }
 
   update = () => {
     console.clear();
+
+    this.scoreBoard();
 
     let out = "\n".repeat(this.vGutter);
 
@@ -54,7 +75,7 @@ class GameBoard {
 
       for (let j = 0; j < this.grid.length; j++) {
         this.grid[i][j].hasOwnProperty("char")
-          ? (out += this.grid[i][j].char || this.grid[i][j])
+          ? (out += this.grid[i][j].char)
           : (out += " ");
         j < this.grid.length - 1 ? (out += " ".repeat(this.hSpacing)) : null;
       }

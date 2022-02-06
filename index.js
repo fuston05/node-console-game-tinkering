@@ -1,14 +1,6 @@
 const Game = require("./Classes/Game");
 
-const config = {
-  hSpace: 6,
-  vSpace: 3,
-  vGut: 2,
-  border: "*",
-};
-
-const game = new Game(config);
+const game = new Game();
 
 
 game.start();
-game.playRound();

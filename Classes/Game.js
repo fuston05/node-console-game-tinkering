@@ -1,30 +1,74 @@
 const GameBoard = require("./GameBoard");
 const rl = require("../readline");
+const { log, styledMessage } = require("../utils.js");
 
 class Game {
-  constructor(config) {
-    this.gameBoard = new GameBoard(config);
+  constructor() {
     this.playing = false;
     this.winner = null;
     this.player = null;
     this.warning = null;
+    this.players = {
+      one: "",
+      two: "",
+    };
+    this.score = {
+      X: 0,
+      O: 0,
+    };
+    this.gameBoard = new GameBoard(this.score, this.players);
     this.commands = {
       q: this.quit,
     };
   }
 
-  start() {
-    this.gameBoard.buildGrid();
+  setPlayers(players) {
+    this.players = players;
+  }
+
+  reset() {
     this.playing = true;
     this.warning = null;
+    this.player = null;
+    this.winner = null;
+    this.score["X"] = 0;
+    this.score["O"] = 0;
+    this.player_1 = "";
+    this.player_2 = "";
+    this.start();
+  }
+
+  start() {
     this.player = "X";
     this.winner = null;
+    this.initPlayers();
+    this.gameBoard.initGrid();
+  }
+
+  initPlayers() {
+    this.gameBoard.update();
+    rl.question("Player one, what is your name? ", (answer) => {
+      let name = answer.toString().trim().toLowerCase();
+      this.players["one"] = name;
+      log.message(`Welcome to the Game, ${name}`, "message");
+
+      rl.question("Player two, what is your name? ", (answer2) => {
+        let name2 = answer2.toString().trim().toLowerCase();
+        this.players["two"] = name2;
+        log.message(`Welcome to the Game, ${name2}`, "message");
+        this.gameBoard.update();
+        this.playRound();
+      });
+    });
   }
 
   playRound() {
-    console.log(`\nPlayer turn: ${this.player}\n`);
+    if (this.warning) {
+      this.gameBoard.update();
+      styledMessage(this.warning, "error");
+    }
 
-    this.warning ? console.log("\nWarning: ", this.warning, "\n") : null;
+    log.message(`\nPlayer turn: ${this.player}\n`);
 
     rl.question("Enter x, y coords (or Q to quit) ", (userInput) => {
       let input = this.parseInput(userInput);
@@ -60,10 +104,9 @@ class Game {
       // is a single letter command
       return this.formatCommand(inp);
     } else {
-      // input not understood
-      console.log(
-        "\nCommands: single letter only; i.e. 'Q' \nCoordinates: 2 digits, numbers 1-3 only; i.e. '3, 1'\n"
-      );
+      this.warning = `Invalid input: "${inp}"`;
+
+      this.playRound();
 
       return false;
     }
@@ -90,23 +133,33 @@ class Game {
       this.gameBoard.update();
 
       if (this.isWinner(this.player)) {
-        console.log(`\n**** Player ${this.player} wins! ****\n`);
+        this.score[this.player]++;
+        this.gameBoard.update();
+        styledMessage(`PLAYER ${this.player} WINS!!!`, "message");
 
         rl.question("Play again? (y or n) ", (answer) => {
           if (answer.toLowerCase().trim() === "y") {
-            console.log("\nrestarting game\n");
-            this.start();
+            rl.question("New players? ", (answer) => {
+              if (answer.toLowerCase().trim() === "y") {
+                console.log("\nrestarting game\n");
+                this.reset();
+              } else {
+                console.log("\nrestarting game\n");
+                this.start();
+              }
+            });
           } else {
             this.quit();
           }
         });
       }
     } else {
-      this.warning = `Cannot play at ${inp}`;
+      this.warning = `${inp} is taken`;
     }
   }
 
   runCommand(inp) {
+    this.gameBoard.update();
     this.commands[inp]();
   }
 
@@ -148,13 +201,11 @@ class Game {
       this.winner = player;
       return player;
     } else return null;
-    e;
   }
 
   quit() {
-    console.log("\n**********************");
-    console.log("*    Exiting Game    *");
-    console.log("**********************\n");
+    this.playing = false;
+    styledMessage("Exiting Game", "message");
     process.exit();
   }
 }
