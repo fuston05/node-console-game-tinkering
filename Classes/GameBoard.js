@@ -63,11 +63,7 @@ class GameBoard {
     }
   }
 
-  update = () => {
-    console.clear();
-
-    this.scoreBoard();
-
+  updateGrid() {
     let out = "\n".repeat(this.vGutter);
 
     for (let i = 0; i < this.grid.length; i++) {
@@ -84,6 +80,14 @@ class GameBoard {
     }
     out += "\n".repeat(this.vGutter);
     console.log(out);
+  }
+
+  updateView = () => {
+    console.clear();
+
+    this.scoreBoard();
+
+    this.updateGrid();
   };
 }
 

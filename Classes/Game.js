@@ -30,12 +30,18 @@ class Game {
     this.playing = true;
     this.warning = null;
     this.player = null;
-    this.winner = null;
     this.score["X"] = 0;
     this.score["O"] = 0;
     this.player_1 = "";
     this.player_2 = "";
     this.start();
+  }
+
+  continue() {
+    this.winner = null;
+    this.gameBoard.initGrid();
+    this.gameBoard.updateView();
+    this.playRound();
   }
 
   start() {
@@ -46,25 +52,29 @@ class Game {
   }
 
   initPlayers() {
-    this.gameBoard.update();
+    this.gameBoard.updateView();
     rl.question("Player one, what is your name? ", (answer) => {
       let name = answer.toString().trim().toLowerCase();
       this.players["one"] = name;
-      log.message(`Welcome to the Game, ${name}`, "message");
+      log.message(`\nWelcome to the Game, ${name}\n`, "message");
 
       rl.question("Player two, what is your name? ", (answer2) => {
         let name2 = answer2.toString().trim().toLowerCase();
         this.players["two"] = name2;
-        log.message(`Welcome to the Game, ${name2}`, "message");
-        this.gameBoard.update();
-        this.playRound();
+        log.message(`\nWelcome to the Game, ${name2}`, "message");
+        
+        const timeout = setTimeout(() => {
+          this.gameBoard.updateView();
+          this.playRound();
+          clearTimeout(timeout);
+        }, 1000);
       });
     });
   }
 
   playRound() {
     if (this.warning) {
-      this.gameBoard.update();
+      this.gameBoard.updateView();
       styledMessage(this.warning, "error");
     }
 
@@ -125,33 +135,36 @@ class Game {
     return inp.toLowerCase().trim();
   }
 
+  handleWinner() {
+    this.score[this.player]++;
+    this.gameBoard.updateView();
+    styledMessage(`PLAYER ${this.player} WINS!!!`, "message");
+
+    rl.question("Play again? (y or n) ", (answer) => {
+      if (answer.toLowerCase().trim() === "y") {
+        rl.question("New players? (y or n) ", (answer) => {
+          if (answer.toLowerCase().trim() === "y") {
+            console.log("\nrestarting game\n");
+            this.reset();
+          } else {
+            this.continue();
+          }
+        });
+      } else {
+        this.quit();
+      }
+    });
+  }
+
   setCoord(inp) {
     this.warning = null;
     let char = this.player;
     if (this.gameBoard.grid[inp[0] + 1][inp[1] + 1].char === "_") {
       this.gameBoard.grid[inp[0] + 1][inp[1] + 1].char = char;
-      this.gameBoard.update();
+      this.gameBoard.updateView();
 
       if (this.isWinner(this.player)) {
-        this.score[this.player]++;
-        this.gameBoard.update();
-        styledMessage(`PLAYER ${this.player} WINS!!!`, "message");
-
-        rl.question("Play again? (y or n) ", (answer) => {
-          if (answer.toLowerCase().trim() === "y") {
-            rl.question("New players? ", (answer) => {
-              if (answer.toLowerCase().trim() === "y") {
-                console.log("\nrestarting game\n");
-                this.reset();
-              } else {
-                console.log("\nrestarting game\n");
-                this.start();
-              }
-            });
-          } else {
-            this.quit();
-          }
-        });
+        this.handleWinner();
       }
     } else {
       this.warning = `${inp} is taken`;
@@ -159,7 +172,7 @@ class Game {
   }
 
   runCommand(inp) {
-    this.gameBoard.update();
+    this.gameBoard.updateView();
     this.commands[inp]();
   }
 
@@ -206,7 +219,9 @@ class Game {
   quit() {
     this.playing = false;
     styledMessage("Exiting Game", "message");
-    process.exit();
+    setTimeout(() => {
+      process.exit();
+    }, 1000);
   }
 }
 
